@@ -136,7 +136,7 @@ jobs:
           name: Audit backend for vulnerability
           command: |
             cd backend
-            npm intstall
+            npm install
             npm audit --audit-level=critical
 
 #   deploy-infrastructure:
