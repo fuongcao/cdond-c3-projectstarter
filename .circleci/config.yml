@@ -91,7 +91,7 @@ jobs:
   
   build-frontend:
     docker:
-      - image: circleci/node:latest
+      - image: cimg/node:latest
     steps:
       - checkout
       - restore_cache:
@@ -111,7 +111,7 @@ jobs:
 
   build-backend:
     docker:
-      - image: circleci/node:13.8.0
+      - image: cimg/node:latest
     steps:
       - checkout
       - restore_cache:
@@ -132,7 +132,7 @@ jobs:
   test-frontend:
     docker:
       # Docker image here
-      - image: circleci/node:13.8.0
+      - image: cimg/node:latest
     steps:
       # Checkout code from git
       - checkout
@@ -150,7 +150,7 @@ jobs:
   test-backend:
     docker:
       # Docker image here
-      - image: circleci/node:13.8.0
+      - image: cimg/node:latest
     steps:
       # Checkout code from git
       - checkout
@@ -168,7 +168,7 @@ jobs:
   scan-frontend:
     docker:
       # Docker image here
-      - image: circleci/node:13.8.0
+      - image: cimg/node:latest
     steps:
       # Checkout code from git
       - checkout
@@ -194,7 +194,7 @@ jobs:
   scan-backend:
     docker:
       # Docker image here
-      - image: circleci/node:13.8.0
+      - image: cimg/node:latest
     steps:
       # Checkout code from git
       - checkout
