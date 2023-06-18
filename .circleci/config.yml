@@ -57,7 +57,7 @@ jobs:
               ]
             }
           event: always
-  	  - slack/notify:
+      - slack/notify:
           event: pass
           template: basic_success_1
 
