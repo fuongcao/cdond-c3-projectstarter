@@ -3,6 +3,11 @@ version: 2.1
 orbs:
   slack: circleci/slack@4.4.2
 
+default: &default
+  docker:
+    - image: cimg/node:16.10
+  working_directory: /tmp
+
 commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
@@ -67,31 +72,10 @@ commands:
           event: fail
           template: basic_fail_1
 jobs:
-  # notify:
-  #   docker:
-  #     - image: cimg/base:stable
-  #   steps:
-  #     - slack/notify:
-  #         custom: |
-  #           {
-  #             "blocks": [
-  #               {
-  #                 "type": "section",
-  #                 "fields": [
-  #                   {
-  #                     "type": "plain_text",
-  #                     "text": "UdaPeoble start build !",
-  #                     "emoji": true
-  #                   }
-  #                 ]
-  #               }
-  #             ]
-  #           }
-  #         event: always
-  
   build-frontend:
-    docker:
-      - image: cimg/node:latest
+    # docker:
+    #   - image: cimg/node:20.3.0
+    <<: *default
     steps:
       - checkout
       - restore_cache:
@@ -110,8 +94,9 @@ jobs:
           key: frontend-build
 
   build-backend:
-    docker:
-      - image: cimg/node:latest
+    # docker:
+    #   - image: cimg/node:20.3.0
+    <<: *default
     steps:
       - checkout
       - restore_cache:
@@ -130,9 +115,9 @@ jobs:
           key: backend-build
 
   test-frontend:
-    docker:
-      # Docker image here
-      - image: cimg/node:latest
+    # docker:
+    #   - image: cimg/node:latest
+    <<: *default
     steps:
       # Checkout code from git
       - checkout
@@ -148,9 +133,9 @@ jobs:
             npm run test
               
   test-backend:
-    docker:
-      # Docker image here
-      - image: cimg/node:latest
+    # docker:
+    #   - image: cimg/node:latest
+    <<: *default
     steps:
       # Checkout code from git
       - checkout
@@ -166,9 +151,9 @@ jobs:
             npm run test
             
   scan-frontend:
-    docker:
-      # Docker image here
-      - image: cimg/node:latest
+    # docker:
+    #   - image: cimg/node:latest
+    <<: *default
     steps:
       # Checkout code from git
       - checkout
@@ -192,9 +177,9 @@ jobs:
           template: basic_success_1
 
   scan-backend:
-    docker:
-      # Docker image here
-      - image: cimg/node:latest
+    # docker:
+    #   - image: cimg/node:latest
+    <<: *default
     steps:
       # Checkout code from git
       - checkout
