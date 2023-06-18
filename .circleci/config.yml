@@ -5,7 +5,7 @@ orbs:
 
 default: &default
   docker:
-    - image: cimg/node:16.10
+    - image: circleci/node:16.10
   working_directory: /tmp
 
 commands:
