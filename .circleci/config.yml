@@ -40,15 +40,28 @@ jobs:
     docker:
       - image: cimg/base:stable
     steps:
-      - run: echo "done"
       - slack/notify:
-          event: pass
-          template: basic_success_1
-
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "plain_text",
+                      "text": "UdaPeoble start build !",
+                      "emoji": true
+                    }
+                  ]
+                }
+              ]
+            }
+          event: always
+  
   build-frontend:
     docker:
       - image: circleci/node:13.8.0
-    steps:  
+    steps:
       - checkout
       - restore_cache:
           keys: [frontend-build]
@@ -58,6 +71,10 @@ jobs:
             cd frontend
             npm install
             npm run build
+      - slack/notify:
+          event: pass
+          template: basic_success_1
+
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
@@ -75,6 +92,10 @@ jobs:
             cd backend
             npm install
             npm run build
+      - slack/notify:
+          event: pass
+          template: basic_success_1
+
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
@@ -136,12 +157,9 @@ jobs:
             npm audit --audit-level=critical
       - slack/notify:
           event: fail
-          channel: p3, random
-          mentions: '@Phuonng Cao'
           template: basic_fail_1
       - slack/notify:
           event: pass
-          channel: p3, random
           template: basic_success_1
 
   scan-backend:
@@ -165,11 +183,10 @@ jobs:
       - slack/notify:
           event: fail
           template: basic_fail_1
-          channel: p3, random
       - slack/notify:
           event: pass
           template: basic_success_1
-          channel: p3, random
+
 
 #   deploy-infrastructure:
 #     docker:
