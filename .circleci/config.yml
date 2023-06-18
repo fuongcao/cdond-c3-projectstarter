@@ -71,6 +71,23 @@ jobs:
             cd frontend
             npm install
             npm run build
+      - slack/notify:
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "plain_text",
+                      "text": "UdaPeoble frontend build completed !",
+                      "emoji": true
+                    }
+                  ]
+                }
+              ]
+            }
+          event: always
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
@@ -87,7 +104,24 @@ jobs:
           command: |
             cd backend
             npm install
-            npm run build
+            npm run build]
+      - slack/notify:
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "plain_text",
+                      "text": "UdaPeoble backend build completed !",
+                      "emoji": true
+                    }
+                  ]
+                }
+              ]
+            }
+          event: always
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
