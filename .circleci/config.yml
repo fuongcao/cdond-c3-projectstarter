@@ -147,6 +147,14 @@ jobs:
             npm audit fix
             npm audit fix --force
             npm audit --audit-level=critical
+      - slack/notify:
+          channel: 
+          event: fail
+          mentions: '@Phuonng Cao'
+          template: basic_fail_1
+      - slack/notify:
+          event: pass
+          template: success_tagged_deploy_1
 
   scan-backend:
     docker:
@@ -165,8 +173,15 @@ jobs:
             cd backend
             npm install
             npm audit fix
-            npm audit fix --force
             npm audit --audit-level=critical
+      - slack/notify:
+          channel: 
+          event: fail
+          mentions: '@Phuonng Cao'
+          template: basic_fail_1
+      - slack/notify:
+          event: pass
+          template: success_tagged_deploy_1
 
 #   deploy-infrastructure:
 #     docker:
