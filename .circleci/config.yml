@@ -13,7 +13,7 @@ commands:
     parameters:
       # Add parameter here
       stackname:
-        type: String
+        type: string
         default: ""   
     steps:
       - run:
