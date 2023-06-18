@@ -70,6 +70,7 @@ commands:
       - slack/notify:
           event: fail
           template: basic_fail_1
+
 jobs:
   build-frontend:
     # docker:
@@ -170,7 +171,7 @@ jobs:
             cd frontend
             node --version && npm --version
             npm install
-            npm audit fix
+            npm audit fix --audit-level=critical
             npm audit fix --force
             npm audit --audit-level=critical
       - slack/notify:
@@ -197,7 +198,8 @@ jobs:
             cd backend
             node --version && npm --version
             npm install
-            npm audit fix
+            npm audit fix --audit-level=critical
+            npm audit fix --force
             npm audit --audit-level=critical
       - slack/notify:
           event: fail
