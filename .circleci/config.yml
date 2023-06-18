@@ -148,7 +148,6 @@ jobs:
             npm audit fix --force
             npm audit --audit-level=critical
       - slack/notify:
-          channel: 
           event: fail
           mentions: '@Phuonng Cao'
           template: basic_fail_1
@@ -175,7 +174,6 @@ jobs:
             npm audit fix
             npm audit --audit-level=critical
       - slack/notify:
-          channel: 
           event: fail
           mentions: '@Phuonng Cao'
           template: basic_fail_1
