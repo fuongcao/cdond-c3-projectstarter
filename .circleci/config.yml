@@ -5,7 +5,7 @@ orbs:
 
 default: &default
   docker:
-    - image: circleci/v13.8.0
+    - image: circleci/node:14.18.2
 
 commands:
   destroy-environment:
