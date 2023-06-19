@@ -208,7 +208,6 @@ jobs:
           event: pass
           template: basic_success_1
 
-
   deploy-infrastructure:
     docker:
       # Docker image here that supports AWS CLI
@@ -246,7 +245,7 @@ jobs:
               --output text >> .circleci/ansible/inventory.txt
             cat .circleci/ansible/inventory.txt
       - persist_to_workspace:
-          root: ~/
+          root: .circleci/ansible/
           paths:
             - inventory.txt
 
@@ -267,7 +266,7 @@ jobs:
           fingerprints: ["5e:00:73:c4:88:cd:40:fa:a8:38:fa:0e:f9:4c:a8:4b"]
       # attach workspace'
       - attach_workspace:
-          at: ~/
+          at: .circleci/ansible/
       - run:
           name: print inventory file
           command: |
