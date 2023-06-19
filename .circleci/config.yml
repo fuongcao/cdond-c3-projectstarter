@@ -246,10 +246,11 @@ jobs:
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --output text >> .circleci/ansible/inventory.txt
-            cat .circleci/ansible/inventory.txt
+              --output text >> workspace/inventory.txt
+            cat workspace/inventory.txt
+      - run: mkdir -p workspace
       - persist_to_workspace:
-          root: .circleci/ansible/
+          root: workspace
           paths:
             - inventory.txt
 
@@ -270,11 +271,13 @@ jobs:
           fingerprints: ["5e:00:73:c4:88:cd:40:fa:a8:38:fa:0e:f9:4c:a8:4b"]
       # attach workspace'
       - attach_workspace:
-          at: .circleci/ansible/
+          at: workspace
       - run:
           name: print inventory file
           command: |
-            cat inventory
+             workspace/inventory.txtcat
+      - run: pwd
+      - run: ls -ls
       - run:
           name: Install dependencies
           command: |
@@ -284,7 +287,9 @@ jobs:
           name: Configure server
           command: |
             # Your code here
+            cp workspace/inventory.txt .circleci/ansible
             cd .circleci/ansible
+            cat inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
       # Here's where you will add some code to rollback on failure
 
