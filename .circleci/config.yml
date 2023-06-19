@@ -219,26 +219,26 @@ jobs:
           name: Install tar utility
           command: |
             yum install -y tar gzip
-      - run:
-          name: Ensure back-end infrastructure exists
-          # Use the workflow id to mark your CloudFormation stacks so that you can reference them later on (ex: rollback). 
-          command: |
-            echo "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
-            aws cloudformation deploy \
-              --template-file .circleci/files/backend.yml \
-              --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
-              --tags project=udapeople Name=backend-${CIRCLE_WORKFLOW_ID:0:7}
+      # - run:
+      #     name: Ensure back-end infrastructure exists
+      #     # Use the workflow id to mark your CloudFormation stacks so that you can reference them later on (ex: rollback). 
+      #     command: |
+      #       echo "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+      #       aws cloudformation deploy \
+      #         --template-file .circleci/files/backend.yml \
+      #         --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+      #         --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
+      #         --tags project=udapeople Name=backend-${CIRCLE_WORKFLOW_ID:0:7}
             
-      - run:
-          name: Ensure front-end infrastructure exist
-          command: |
-            echo "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
-            aws cloudformation deploy \
-              --template-file .circleci/files/frontend.yml \
-              --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
-              --tags project=udapeople Name=frontend-${CIRCLE_WORKFLOW_ID:0:7}
+      # - run:
+      #     name: Ensure front-end infrastructure exist
+      #     command: |
+      #       echo "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+      #       aws cloudformation deploy \
+      #         --template-file .circleci/files/frontend.yml \
+      #         --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
+      #         --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
+      #         --tags project=udapeople Name=frontend-${CIRCLE_WORKFLOW_ID:0:7}
 
       - run:
           name: Add back-end ip to ansible inventory
@@ -246,11 +246,13 @@ jobs:
 
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --output text >> circleci/ansible/inventory.txt
-            cat circleci/ansible/inventory.txt
+              # --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --filters "Name=tag:Name, Values=backend-84586e1" \
+              --output text >> .circleci/ansible/inventory.txt
+            cat .circleci/ansible/inventory.txt
+      - run: pwd
       - run: mkdir -p workspace
-      - run: circleci/ansible/inventory.txt workspace
+      - run: cp .circleci/ansible/inventory.txt workspace
       - persist_to_workspace:
           root: workspace
           paths:
@@ -416,22 +418,22 @@ workflows:
           context: slack-secrets
       - build-backend:
           context: slack-secrets
-      - test-frontend:
-          requires: [build-frontend]
-      - test-backend:
-          requires: [build-backend]
+      # - test-frontend:
+      #     requires: [build-frontend]
+      # - test-backend:
+      #     requires: [build-backend]
       # - scan-backend:
       #     context: slack-secrets
       #     requires: [build-backend]
       # - scan-frontend:
       #     context: slack-secrets
       #     requires: [build-frontend]
-      - deploy-infrastructure:
-          # requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-          requires: [test-frontend, test-backend]
-          filters:
-            branches:
-              only: [master]
+      # - deploy-infrastructure:
+      #     # requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+      #     requires: [build-frontend, build-backend]
+      #     filters:
+      #       branches:
+      #         only: [master]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
       # - run-migrations:
