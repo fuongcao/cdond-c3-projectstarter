@@ -216,6 +216,10 @@ jobs:
       # Checkout code from git
       - checkout
       - run:
+          name: Install tar utility
+          command: |
+            yum install -y tar gzip
+      - run:
           name: Ensure back-end infrastructure exists
           # Use the workflow id to mark your CloudFormation stacks so that you can reference them later on (ex: rollback). 
           command: |
