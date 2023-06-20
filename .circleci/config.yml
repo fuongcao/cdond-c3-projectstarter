@@ -1,7 +1,23 @@
 version: 2.1
 
+executors:
+  node14-executor:
+    docker:
+      - image: circleci/node:14.18.2
+
+  awscli-executor:
+    docker:
+      - image: amazon/aws-cli:2.12.1
+
+  python-executor:
+    docker
+      - image: python:3.7-alpine3.11
+
+
 orbs:
   slack: circleci/slack@4.4.2
+  aws-cli: circleci/aws-cli@0.1.2
+  aws-s3: circleci/aws-s3@1.0.0
 
 default: &default
   docker:
@@ -79,8 +95,7 @@ commands:
 
 jobs:
   build-frontend:
-    # docker:
-    <<: *default
+    executor: node14-executor
     steps:
       - checkout
       - restore_cache:
@@ -100,8 +115,7 @@ jobs:
           key: frontend-build
 
   build-backend:
-    # docker:
-    <<: *default
+    executor: node14-executor
     steps:
       - checkout
       - restore_cache:
@@ -121,8 +135,7 @@ jobs:
           key: backend-build
 
   test-frontend:
-    # docker:
-    <<: *default
+    executor: node14-executor
     steps:
       # Checkout code from git
       - checkout
@@ -139,8 +152,7 @@ jobs:
             npm run test
               
   test-backend:
-    # docker:
-    <<: *default
+    executor: node14-executor
     steps:
       # Checkout code from git
       - checkout
@@ -157,8 +169,7 @@ jobs:
             npm run test
             
   scan-frontend:
-    # docker:
-    <<: *default
+    executor: node14-executor
     steps:
       # Checkout code from git
       - checkout
@@ -183,8 +194,7 @@ jobs:
           template: basic_success_1
 
   scan-backend:
-    # docker:
-    <<: *default
+    executor: node14-executor
     steps:
       # Checkout code from git
       - checkout
@@ -209,9 +219,7 @@ jobs:
           template: basic_success_1
 
   deploy-infrastructure:
-    docker:
-      # Docker image here that supports AWS CLI
-      - image: amazon/aws-cli:2.12.1
+    executor: awscli-executor
     steps:
       # Checkout code from git
       - checkout
@@ -219,26 +227,26 @@ jobs:
           name: Install tar utility
           command: |
             yum install -y tar gzip
-      # - run:
-      #     name: Ensure back-end infrastructure exists
-      #     # Use the workflow id to mark your CloudFormation stacks so that you can reference them later on (ex: rollback). 
-      #     command: |
-      #       echo "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
-      #       aws cloudformation deploy \
-      #         --template-file .circleci/files/backend.yml \
-      #         --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-      #         --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
-      #         --tags project=udapeople Name=backend-${CIRCLE_WORKFLOW_ID:0:7}
+      - run:
+          name: Ensure back-end infrastructure exists
+          # Use the workflow id to mark your CloudFormation stacks so that you can reference them later on (ex: rollback). 
+          command: |
+            echo "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+            aws cloudformation deploy \
+              --template-file .circleci/files/backend.yml \
+              --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
+              --tags project=udapeople Name=backend-${CIRCLE_WORKFLOW_ID:0:7}
             
-      # - run:
-      #     name: Ensure front-end infrastructure exist
-      #     command: |
-      #       echo "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
-      #       aws cloudformation deploy \
-      #         --template-file .circleci/files/frontend.yml \
-      #         --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
-      #         --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
-      #         --tags project=udapeople Name=frontend-${CIRCLE_WORKFLOW_ID:0:7}
+      - run:
+          name: Ensure front-end infrastructure exist
+          command: |
+            echo "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+            aws cloudformation deploy \
+              --template-file .circleci/files/frontend.yml \
+              --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
+              --tags project=udapeople Name=frontend-${CIRCLE_WORKFLOW_ID:0:7}
 
       - run:
           name: Add back-end ip to ansible inventory
@@ -246,26 +254,32 @@ jobs:
 
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:Name, Values=backend-84586e1" \
+              --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --output text >> .circleci/ansible/inventory.txt
             cat .circleci/ansible/inventory.txt
-      - run: pwd
-      - run: mkdir -p workspace
-      - run: cp .circleci/ansible/inventory.txt workspace
+      - run:
+          name: Create workspace Show Working Directory
+          command: |
+            pwd 
+            mkdir -p workspace
+            ls -ls
+      - run:
+          name: copy inventory file to workspace
+          command: |
+            cp .circleci/ansible/inventory.txt workspace
+
       - persist_to_workspace:
           root: workspace
           paths:
             - inventory.txt
-
-      # Here's where you will add some code to rollback on failure
-      # - destroy-environment:
-      #     backend: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
-      #     frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+      #Here's where you will add some code to rollback on failure
+      - destroy-environment:
+          backend: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+          frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
 
   configure-infrastructure:
-    docker:
-      # Docker image here that supports Ansible
-      - image: python:3.7-alpine3.11
+    # Docker image here that supports Ansible
+    executor: python-executor
     steps:
       # Checkout code from git
       - checkout
@@ -279,8 +293,11 @@ jobs:
           name: print inventory file
           command: |
             cat workspace/inventory.txt
-      - run: pwd
-      - run: ls -ls
+      - run:
+          name: Show Working Directory
+          command: |
+            pwd 
+            ls -ls
       - run:
           name: Install dependencies
           command: |
@@ -304,6 +321,11 @@ jobs:
       # Checkout code from 
       - checkout
       - run:
+          name: Show Working Directory
+          command: |
+            pwd 
+            ls -ls
+      - run:
           name: Run migrations
           command: |
             cd backend
@@ -316,7 +338,7 @@ jobs:
             then
               curl https://kvdb.io/5wmWmpBowaqtCzGWxLD169/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
-              # Here's where you will add some code to rollback on failure      
+              # Here's where you will add some code to rollback on failure     
 
   # deploy-frontend:
   #   docker:
@@ -440,10 +462,10 @@ workflows:
           filters:
             branches:
               only: [master]
-      # - configure-infrastructure:
-      #     requires: [deploy-infrastructure]
-      - run-migrations:
+      - configure-infrastructure:
           requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
       # - deploy-frontend:
       #     requires: [run-migrations]
       # - deploy-backend:
