@@ -10,7 +10,7 @@ executors:
       - image: amazon/aws-cli:2.12.1
 
   python-executor:
-    docker
+    docker:
       - image: python:3.7-alpine3.11
 
 
