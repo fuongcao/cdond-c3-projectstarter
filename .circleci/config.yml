@@ -1,7 +1,7 @@
 version: 2.1
 
 executors:
-  node14-executor:
+  nodejs-executor:
     docker:
       # - image: circleci/node:14.18.2
       - image: cimg/node:13.14.0
@@ -92,7 +92,7 @@ commands:
 
 jobs:
   build-frontend:
-    executor: node14-executor
+    executor: nodejs-executor
     steps:
       - checkout
       - restore_cache:
@@ -112,7 +112,7 @@ jobs:
           key: frontend-build
 
   build-backend:
-    executor: node14-executor
+    executor: nodejs-executor
     steps:
       - checkout
       - restore_cache:
@@ -132,7 +132,7 @@ jobs:
           key: backend-build
 
   test-frontend:
-    executor: node14-executor
+    executor: nodejs-executor
     steps:
       # Checkout code from git
       - checkout
@@ -149,7 +149,7 @@ jobs:
             npm run test
               
   test-backend:
-    executor: node14-executor
+    executor: nodejs-executor
     steps:
       # Checkout code from git
       - checkout
@@ -166,7 +166,7 @@ jobs:
             npm run test
             
   scan-frontend:
-    executor: node14-executor
+    executor: nodejs-executor
     steps:
       # Checkout code from git
       - checkout
@@ -191,7 +191,7 @@ jobs:
           template: basic_success_1
 
   scan-backend:
-    executor: node14-executor
+    executor: nodejs-executor
     steps:
       # Checkout code from git
       - checkout
@@ -313,7 +313,7 @@ jobs:
 
   run-migrations:
     # Docker image here that supports NodeJS
-    <<: *default
+    executor: nodejs-executor
     steps:
       # Checkout code from 
       - checkout
