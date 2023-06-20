@@ -3,7 +3,8 @@ version: 2.1
 executors:
   node14-executor:
     docker:
-      - image: circleci/node:14.18.2
+      # - image: circleci/node:14.18.2
+      - image: cimg/node:13.14.0
 
   awscli-executor:
     docker:
@@ -18,10 +19,6 @@ orbs:
   slack: circleci/slack@4.4.2
   aws-cli: circleci/aws-cli@0.1.2
   aws-s3: circleci/aws-s3@1.0.0
-
-default: &default
-  docker:
-    - image: circleci/node:14.18.2
 
 commands:
   destroy-environment:
@@ -468,8 +465,8 @@ workflows:
               only: [master]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
-      - run-migrations:
-          requires: [configure-infrastructure]
+      # - run-migrations:
+      #     requires: [configure-infrastructure]
       # - deploy-frontend:
       #     requires: [run-migrations]
       # - deploy-backend:
