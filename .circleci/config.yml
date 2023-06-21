@@ -374,7 +374,6 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            mkdir -p root/
             yum install -y tar gzip
             curl -sL https://rpm.nodesource.com/setup_13.x | bash -
             yum install -y nodejs
@@ -388,7 +387,6 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
             export API_URL="http://${BACKEND_IP}:3030"
-            echo "${API_URL}"
             echo $API_URL > frontend/.env
             cat frontend/.env
             # save to workspace
@@ -404,13 +402,15 @@ jobs:
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             # Copy frontend to S3
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
-            echo "https://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3.amazonaws.com" > root/workspace/fe_statis_host
+            # save to workspace
+            STATIC_HOST=https://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3.amazonaws.com
+            echo $STATIC_HOST > root/workspace/fe_static_host
             
       - persist_to_workspace:
           root: root/workspace
           paths:
             - be_endpoint
-            - fe_statis_host
+            - fe_static_host
       # Here's where you will add some code to rollback on failure
                     
   deploy-backend:
@@ -482,7 +482,7 @@ jobs:
       - run:
           name: Frontend smoke test.
           command: |
-            FE_STATIC_HOST=$(cat root/workspace/fe_statis_host)
+            FE_STATIC_HOST=$(cat root/workspace/fe_static_host)
             FE_URL="https://$FE_STATIC_HOST/index.html"
             REPONSE = $(eval curl -s $FE_URL)
             if echo $RESPONSE | grep "View & Manage Employees" 
