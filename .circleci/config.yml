@@ -499,11 +499,12 @@ jobs:
       - run:
           name: Show workspace content
           command: |
+            lsb_release -a
             ls -ls /home/circleci/workspace
       - run:
           name: Install Dependencies
           command: |
-            apt install -y tar
+            sudo apt install -y tar
       - run:
           name: Backend smoke test.
           command: |
