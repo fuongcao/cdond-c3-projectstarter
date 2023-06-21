@@ -170,14 +170,21 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: [backend-build] 
       - run:
           name: Back-end build
           command: |
+            apt install -y tag
             cd backend
             echo "node:$(node --version)" && echo "npm:$(npm --version)"
             npm install
             npm run build
+            # zip backend artifact
+            cd ..
+            mkdir -p home/circleci/workspace
+            tar -C backend -czvf artifact.tar.gz .
+            # Move backend artifact to ansible deploy
+            mv artifact.tar.gz home/circleci/workspace/     
       - notify_slack_pass
       - notify_slack_fail
 
@@ -185,6 +192,11 @@ jobs:
           paths: [backend/node_modules]
           key: backend-build
 
+      - persist_to_workspace:
+          root: home/circleci/workspace/
+          paths:
+            - artifact.tar.gz
+      
   test-frontend:
     executor: nodejs-executor
     steps:
@@ -368,6 +380,8 @@ jobs:
     steps:
       # Checkout code from 
       - checkout
+      - restore_cache:
+          keys: [build-backend]
       - run:
           name: Show Working Directory
           command: pwd && ls -ls
@@ -390,56 +404,6 @@ jobs:
             fi
             # Here's where you will add some code to rollback on failure     
 
-  deploy-frontend:
-    # Docker image here that supports AWS CLI
-    executor: awscli-executor
-    steps:
-      # Checkout code from git
-      - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            yum install -y tar gzip
-            curl -sL https://rpm.nodesource.com/setup_13.x | bash -
-            yum install -y nodejs
-            echo "node:$(node --version)" && echo "npm:$(npm --version)"
-            mkdir -p root/workspace
-      - run:
-          name: Get backend url
-          command: |
-            # your code here
-            export BACKEND_IP=$(aws ec2 describe-instances \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
-            export API_URL="http://${BACKEND_IP}:3030"
-            echo $API_URL > frontend/.env
-            cat frontend/.env
-            # save to workspace
-            echo $BACKEND_IP > root/workspace/be_endpoint
-
-      - run:
-          name: Deploy frontend objects
-          command: |
-            cd frontend
-            npm install
-            npm run build
-            # Archive frontend artifact
-            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-            # Copy frontend to S3
-            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
-            # save to workspace
-            export STATIC_HOST=https://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3.amazonaws.com
-            cd ..
-            pwd
-            echo $STATIC_HOST > root/workspace/fe_static_host
-            
-      - persist_to_workspace:
-          root: root/workspace
-          paths:
-            - be_endpoint
-            - fe_static_host
-      # Here's where you will add some code to rollback on failure
-                    
   deploy-backend:
     # Docker image here that supports Ansible
     executor: python-executor
@@ -456,31 +420,16 @@ jobs:
             cat root/workspace/inventory.txt
             cp root/workspace/inventory.txt .circleci/ansible
       - run:
-          name: Install dependencies
-          command: |
-            apk add tar gzip
-            apk add curl
-            curl -fsSL https://deb.nodesource.com/setup_13.x | bash -
-            apk add nodejs
-            echo "node:$(node --version)" && echo "npm:$(npm --version)"
-            cd backend
-            npm i
-            npm run build
-      - run:
           name: Deploy backend
           command: |
-              # Zip backend folder
-              cd ..
-              tar -C backend -czvf artifact.tar.gz .
+            echo "Copy artifact.tar.gz to ansible"
+            cp home/circleci/workspace/artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
+            echo "Run Ansible playbook for backend"
+            echo "Contents  of the inventory.txt file is -------"
+            cd .circleci/ansible/
+            cat inventory.txt
+            ansible-playbook -i inventory.txt roles/tasks/deploy-backend.yml
 
-              # Move backend artifact to ansible deploy
-              mv artifact.tar.gz .circleci/ansible/roles/deploy/files
-
-              # Run Ansible playbook for backend
-              echo "Contents  of the inventory.txt file is -------"
-              cd .circleci/ansible/
-              cat inventory.txt
-              ansible-playbook -i inventory.txt roles/tasks/deploy-backend.yml
       # Here's where you will add some code to rollback on failure  
 
   smoke-test:
@@ -505,7 +454,7 @@ jobs:
               return 0
             else
               return 1
-            f
+            fi
 
       - run:
           name: Frontend smoke test.
