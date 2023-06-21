@@ -460,7 +460,7 @@ jobs:
           command: |
             apk add tar gzip
             apk add curl
-            curl -fsSL https://deb.nodesource.com/setup_13.x | -E bash -
+            curl -fsSL https://deb.nodesource.com/setup_13.x | bash -
             apk add nodejs
             echo "node:$(node --version)" && echo "npm:$(npm --version)"
             cd backend
@@ -524,20 +524,20 @@ jobs:
             fi
       # Here's where you will add some code to rollback on failure  
 
-  # cloudfront-update:
-  #   docker:
-  #     # Docker image here that supports AWS CLI
-  #   steps:
-  #     # Checkout code from git
-  #     - run:
-  #         name: Install dependencies
-  #         command: |
-  #           # your code here
-  #     - run:
-  #         name: Update cloudfront distribution
-  #         command: |
-  #           # your code here
-  #     # Here's where you will add some code to rollback on failure  
+  cloudfront-update:
+    # Docker image here that supports AWS CLI
+    executor: awscli-executor
+    steps:
+      - checkout
+      - run:
+          name: Update cloudfront distribution
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/cloudfront.yml \
+              --stack-name InitialStack \
+              --parameter-objects workflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --tags project=udapeople Name=udapeople-${CIRCLE_WORKFLOW_ID:0:7}
+      # Here's where you will add some code to rollback on failure  
 
 # cleanup:
 #     docker:
