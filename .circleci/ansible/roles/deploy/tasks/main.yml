@@ -7,7 +7,7 @@
 - name: "copy backend artifact zip file to server"
   copy:
     src: "artifact.tar.gz"
-    dest: "~/webapp"
+    dest: "~/webapp/artifact.tar.gz"
 
 - name: "Unzip backend artifact"
   unarchive:

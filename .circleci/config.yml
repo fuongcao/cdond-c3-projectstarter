@@ -472,7 +472,8 @@ jobs:
             cat /root/workspace/inventory.txt
             cp /root/workspace/inventory.txt .circleci/ansible
             echo "Copy artifact.tar.gz to ansible"
-            cp /root/workspace/artifact.tar.gz .circleci/ansible/roles/deploy/files
+            cp /root/workspace/artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
+            ls -ls .circleci/ansible/roles/deploy/files/
       - run:
           name: Install dependencies
           command: |
