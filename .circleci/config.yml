@@ -501,13 +501,9 @@ jobs:
           command: |
             ls -ls /root/workspace
       - run:
-          name: Install dependencies
-          command: |
-            yum install -y tar gzip
-      - run:
           name: Backend smoke test.
           command: |
-            BACKEND_IP=$(cat root/workspace/be_endpoint)
+            BACKEND_IP=$(cat /root/workspace/be_endpoint)
             API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
             if curl "${API_URL}/api/status" | grep "ok"
@@ -516,7 +512,6 @@ jobs:
             else
               return 1
             fi
-
       - run:
           name: Frontend smoke test.
           command: |
