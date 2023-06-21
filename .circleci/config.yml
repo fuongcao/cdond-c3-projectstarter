@@ -481,7 +481,7 @@ jobs:
       - run:
           name: Deploy backend
           command: |
-            echo "Contents  of the inventory.txt file is -------"
+            echo "Contents of the inventory.txt file is -------"
             cd .circleci/ansible/
             cat inventory.txt
             echo "Run Ansible playbook for backend"
