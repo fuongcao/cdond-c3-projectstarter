@@ -465,14 +465,17 @@ jobs:
       - run:
           name: print inventory file and copy to .circleci/ansible
           command: |
+            echo "Where am I ?"
+            pwd && ls -la /root/workspace
+            echo "Copy inventory.txt to ansible"
             cat root/workspace/inventory.txt
             cp root/workspace/inventory.txt .circleci/ansible
+            echo "Copy artifact.tar.gz to ansible"
+            cp root/workspace/artifact.tar.gz .circleci/ansible/roles/deploy/files
+            echo "Run Ansible playbook for backend"
       - run:
           name: Deploy backend
           command: |
-            echo "Copy artifact.tar.gz to ansible"
-            cp root/workspace/artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
-            echo "Run Ansible playbook for backend"
             echo "Contents  of the inventory.txt file is -------"
             cd .circleci/ansible/
             cat inventory.txt
