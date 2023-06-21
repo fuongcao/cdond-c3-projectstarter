@@ -471,7 +471,7 @@ jobs:
           name: Deploy backend
           command: |
             echo "Copy artifact.tar.gz to ansible"
-            cp home/circleci/workspace/artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
+            cp root/workspace/artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
             echo "Run Ansible playbook for backend"
             echo "Contents  of the inventory.txt file is -------"
             cd .circleci/ansible/
