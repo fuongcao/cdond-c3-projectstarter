@@ -287,9 +287,8 @@ jobs:
       - run:
           name: Create workspace Show Working Directory
           command: |
-            pwd 
             mkdir -p /root/project/workspace
-            ls -ls
+            pwd && ls -ls
       - run:
           name: copy inventory file to workspace
           command: |
@@ -375,11 +374,12 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            mkdir -p root/
             yum install -y tar gzip
             curl -sL https://rpm.nodesource.com/setup_13.x | bash -
             yum install -y nodejs
             echo "node:$(node --version)" && echo "npm:$(npm --version)"
-
+            mkdir -p root/workspace
       - run:
           name: Get backend url
           command: |
@@ -389,8 +389,11 @@ jobs:
               --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
-            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
+            echo $API_URL > frontend/.env
             cat frontend/.env
+            # save to workspace
+            echo $BACKEND_IP > root/workspace/be_endpoint
+
       - run:
           name: Deploy frontend objects
           command: |
@@ -401,6 +404,13 @@ jobs:
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             # Copy frontend to S3
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+            echo "https://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3.amazonaws.com" > root/workspace/fe_statis_host
+            
+      - persist_to_workspace:
+          root: root/workspace
+          paths:
+            - be_endpoint
+            - fe_statis_host
       # Here's where you will add some code to rollback on failure
                     
   deploy-backend:
@@ -445,43 +455,62 @@ jobs:
               ansible-playbook -i inventory.txt roles/tasks/deploy-backend.yml
       # Here's where you will add some code to rollback on failure  
 
-#   smoke-test:
-#     docker:
-#       # Lightweight Docker image 
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             # your code here
-#       - run:
-#           name: Get backend url
-#           command: |
-#             # your code here
-#       - run:
-#           name: Backend smoke test.
-#           command: |
-#             # your code here
-#       - run:
-#           name: Frontend smoke test.
-#           command: |
-#             # your code here
-#       # Here's where you will add some code to rollback on failure  
+  smoke-test:
+    # Lightweight Docker image
+    executor: awscli-executor
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /root/workspace
+      - run:
+          name: Install dependencies
+          command: |
+            yum install -y tar gzip
+      - run:
+          name: Backend smoke test.
+          command: |
+            BACKEND_IP=$(cat root/workspace/be_endpoint)
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+            if curl "${API_URL}/api/status" | grep "ok"
+            then
+              echo "backend smoke test passed"
+              return 0
+            else
+              echo "backend smoke test fail"
+  	          return 1
+            fi
+      - run:
+          name: Frontend smoke test.
+          command: |
+            FE_STATIC_HOST=$(cat root/workspace/fe_statis_host)
+            TEST_URL="https://$FE_STATIC_HOST/index.html"
+            REPONSE = $(eval curl -s $TEST_URL)
+            if echo @RESPONSE | grep "View & Manage Employees" 
+            then
+              echo "Frontend smoke test passed"
+              echo $REPONSE
+              exit 0
+            else
+              echo "Frontend smoke test fail"
+              exit 1
+            fi
+      # Here's where you will add some code to rollback on failure  
 
-#   cloudfront-update:
-#     docker:
-#       # Docker image here that supports AWS CLI
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             # your code here
-#       - run:
-#           name: Update cloudfront distribution
-#           command: |
-#             # your code here
-#       # Here's where you will add some code to rollback on failure  
+  # cloudfront-update:
+  #   docker:
+  #     # Docker image here that supports AWS CLI
+  #   steps:
+  #     # Checkout code from git
+  #     - run:
+  #         name: Install dependencies
+  #         command: |
+  #           # your code here
+  #     - run:
+  #         name: Update cloudfront distribution
+  #         command: |
+  #           # your code here
+  #     # Here's where you will add some code to rollback on failure  
 
 # cleanup:
 #     docker:
@@ -534,8 +563,8 @@ workflows:
           requires: [run-migrations]
       - deploy-backend:
           requires: [run-migrations]
-      # - smoke-test:
-      #     requires: [deploy-backend, deploy-frontend]
+      - smoke-test:
+          requires: [deploy-backend, deploy-frontend]
       # - cloudfront-update:
       #     requires: [smoke-test]
       # - cleanup:
