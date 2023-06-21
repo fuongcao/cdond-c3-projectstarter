@@ -431,9 +431,9 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            yum install -y tar gzip
-            curl -sL https://rpm.nodesource.com/setup_13.x | bash -
-            yum install -y nodejs
+            apk install -y tar gzip
+            curl -fsSL https://deb.nodesource.com/setup_13.x | -E bash -
+            apk add -y nodejs
             echo "node:$(node --version)" && echo "npm:$(npm --version)"
             cd backend
             npm i
