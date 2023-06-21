@@ -28,19 +28,46 @@ commands:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
       # Add parameter here
-      backend:
+      stack_name:
         type: string
         default: ""
-      frontend:
+      bucket_name:
         type: string
         default: ""
+      when:
+        type: enum
+        enum: ["always", "on_success", "on_fail"]
+        default: "on_fail"
     steps:
       - run:
-          name: Destroy environments
-          when: on_fail
+          name: "Delete << parameters.stack_name >> stack"
+          when: << parameters.when >>
           command: |
-            aws cloudformation delete-stack --stack-name << parameters.backend >>
-            aws cloudformation delete-stack --stack-name << parameters.frontend >>
+            STACK_NAME="<< parameters.stack_name >>"
+            # stack_name not provied
+            if [[ -z $STACK_NAME ]]
+            then
+                echo "Stack not provied. Skip the delete stack action !"
+              exit 0
+            fi
+
+            echo "deleting stack $STACK_NAME ..."
+            aws cloudformation delete-stack --stack-name << parameters.stack_name >>
+
+      - run:
+          name: "Delete << parameters.bucket_name >> bucket"
+          when: << parameters.when >>
+          command: |
+            BUCKET_NAME="<< parameters.bucket_name >>"
+            # bucket_name not provied
+            if [[ -z $BUCKET_NAME ]]
+            then
+                echo "Bucket not provied. Skip the delete bucket action !"
+              exit 0
+            fi
+
+            echo "deleting bucket $BUCKET_NAME ..."
+            aws cloudformation delete-stack --stack-name << parameters.stack_name >>
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
@@ -273,9 +300,9 @@ jobs:
           paths:
             - inventory.txt
       #Here's where you will add some code to rollback on failure
-      - destroy-environment:
-          backend: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
-          frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+      # - destroy-environment:
+      #     backend: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+      #     frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
 
   configure-infrastructure:
     # Docker image here that supports Ansible
@@ -394,6 +421,10 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            yum install -y tar gzip
+            curl -sL https://rpm.nodesource.com/setup_13.x | bash -
+            yum install -y nodejs
+            echo "node:$(node --version)" && echo "npm:$(npm --version)"
             cd backend
             npm i
             npm run build
