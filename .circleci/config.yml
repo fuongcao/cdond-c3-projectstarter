@@ -378,7 +378,7 @@ jobs:
       # Checkout code from 
       - checkout
       - restore_cache:
-          keys: [build-backend]
+          keys: [backend-build]
       - run:
           name: Show Working Directory
           command: pwd && ls -ls
@@ -433,8 +433,6 @@ jobs:
             cd frontend
             npm install
             npm run build
-            # Archive frontend artifact
-            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             # Copy frontend to S3
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
             # save to workspace
@@ -487,7 +485,7 @@ jobs:
             cd .circleci/ansible/
             cat inventory.txt
             echo "Run Ansible playbook for backend"
-            ansible-playbook -i inventory.txt roles/tasks/deploy-backend.yml
+            ansible-playbook -i inventory.txt deploy-backend.yml
 
       # Here's where you will add some code to rollback on failure  
 
