@@ -403,6 +403,55 @@ jobs:
               curl $KVDBIO_URL -d '0'
             fi
             # Here's where you will add some code to rollback on failure     
+  
+  deploy-frontend:
+    # Docker image here that supports AWS CLI
+    executor: awscli-executor
+    steps:
+      # Checkout code from git
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            yum install -y tar gzip
+            curl -sL https://rpm.nodesource.com/setup_13.x | bash -
+            yum install -y nodejs
+            echo "node:$(node --version)" && echo "npm:$(npm --version)"
+            mkdir -p root/workspace
+      - run:
+          name: Get backend url
+          command: |
+            # your code here
+            export BACKEND_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo $API_URL > frontend/.env
+            cat frontend/.env
+            # save to workspace
+            echo $BACKEND_IP > root/workspace/be_endpoint
+      - run:
+          name: Deploy frontend objects
+          command: |
+            cd frontend
+            npm install
+            npm run build
+            # Archive frontend artifact
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+            # Copy frontend to S3
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+            # save to workspace
+            export STATIC_HOST=https://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3.amazonaws.com
+            cd ..
+            pwd
+            echo $STATIC_HOST > root/workspace/fe_static_host
+            
+      - persist_to_workspace:
+          root: root/workspace
+          paths:
+            - be_endpoint
+            - fe_static_host
+      # Here's where you will add some code to rollback on failure
 
   deploy-backend:
     # Docker image here that supports Ansible
