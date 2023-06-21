@@ -321,16 +321,16 @@ jobs:
       - run:
           name: Create workspace- Show Working Directory
           command: |
-            mkdir -p root/project/workspace
+            cd ..
+            mkdir -p /root/workspace
             pwd && ls -ls
       - run:
           name: copy inventory file to workspace
           command: |
-            cp .circleci/ansible/inventory.txt workspace
-
+            cp .circleci/ansible/inventory.txt /root/workspace
 
       - persist_to_workspace:
-          root: /root/project/workspace
+          root: /root/workspace
           paths:
             - inventory.txt
       #Here's where you will add some code to rollback on failure
@@ -352,7 +352,7 @@ jobs:
       - run:
           name: print inventory file
           command: |
-            cat root/workspace/inventory.txt
+            cat /root/workspace/inventory.txt
       - run:
           name: Show Working Directory
           command: pwd && ls -ls
