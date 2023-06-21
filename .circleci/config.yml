@@ -491,19 +491,23 @@ jobs:
 
   smoke-test:
     # Lightweight Docker image
-    executor: awscli-executor
+    executor: nodejs-executor
     steps:
       - checkout
       - attach_workspace:
-          at: /root/workspace
+          at: /home/circleci/workspace
       - run:
           name: Show workspace content
           command: |
-            ls -ls /root/workspace
+            ls -ls /home/circleci/workspace
+      - run:
+          name: Install Dependencies
+          command: |
+            apt install -y tar
       - run:
           name: Backend smoke test.
           command: |
-            BACKEND_IP=$(cat /root/workspace/be_endpoint)
+            BACKEND_IP=$(cat /home/circleci/workspace/be_endpoint)
             API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
             if curl "${API_URL}/api/status" | grep "ok"
@@ -515,7 +519,7 @@ jobs:
       - run:
           name: Frontend smoke test.
           command: |
-            FE_STATIC_HOST=$(cat root/workspace/fe_static_host)
+            FE_STATIC_HOST=$(cat /home/circleciworkspace/fe_static_host)
             FE_URL="https://$FE_STATIC_HOST/index.html"
             REPONSE = $(eval curl -s $FE_URL)
             if echo $RESPONSE | grep "View & Manage Employees" 
