@@ -330,7 +330,7 @@ jobs:
 
 
       - persist_to_workspace:
-          root: root/project/workspace
+          root: /root/project/workspace
           paths:
             - inventory.txt
       #Here's where you will add some code to rollback on failure
@@ -348,7 +348,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["5e:00:73:c4:88:cd:40:fa:a8:38:fa:0e:f9:4c:a8:4b"]
       - attach_workspace:
-          at: root/workspace
+          at: /root/workspace
       - run:
           name: print inventory file
           command: |
@@ -365,7 +365,7 @@ jobs:
           name: Configure server
           command: |
             # Your code here
-            cp root/workspace/inventory.txt .circleci/ansible
+            cp /root/workspace/inventory.txt .circleci/ansible
             cd .circleci/ansible
             cat inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
@@ -414,7 +414,7 @@ jobs:
             curl -sL https://rpm.nodesource.com/setup_13.x | bash -
             yum install -y nodejs
             echo "node:$(node --version)" && echo "npm:$(npm --version)"
-            mkdir -p root/workspace
+            mkdir -p /root/workspace
       - run:
           name: Get backend url
           command: |
@@ -426,7 +426,7 @@ jobs:
             echo $API_URL > frontend/.env
             cat frontend/.env
             # save to workspace
-            echo $BACKEND_IP > root/workspace/be_endpoint
+            echo $BACKEND_IP > /root/workspace/be_endpoint
       - run:
           name: Deploy frontend objects
           command: |
@@ -441,10 +441,10 @@ jobs:
             export STATIC_HOST=https://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3.amazonaws.com
             cd ..
             pwd
-            echo $STATIC_HOST > root/workspace/fe_static_host
+            echo $STATIC_HOST > /root/workspace/fe_static_host
             
       - persist_to_workspace:
-          root: root/workspace
+          root: /root/workspace
           paths:
             - be_endpoint
             - fe_static_host
@@ -459,21 +459,18 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["5e:00:73:c4:88:cd:40:fa:a8:38:fa:0e:f9:4c:a8:4b"]
       - attach_workspace:
-          at: root/workspace
-      - run:
-          name: print inventory file
-          command: |
-            echo "Where am I ?"
-            pwd && ls -la root/
-            cat root/workspace/inventory.txt
+          at: /root/workspace
       - run:
           name: print inventory file and copy to .circleci/ansible
           command: |
+            echo "Where am I ?"
+            pwd && ls /root
+            cat /root/workspace/inventory.txt
             echo "Copy inventory.txt to ansible"
-            cat root/workspace/inventory.txt
-            cp root/workspace/inventory.txt .circleci/ansible
+            cat /root/workspace/inventory.txt
+            cp /root/workspace/inventory.txt .circleci/ansible
             echo "Copy artifact.tar.gz to ansible"
-            cp root/workspace/artifact.tar.gz .circleci/ansible/roles/deploy/files
+            cp /root/workspace/artifact.tar.gz .circleci/ansible/roles/deploy/files
             echo "Run Ansible playbook for backend"
       - run:
           name: Deploy backend
@@ -491,7 +488,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: root/workspace
+          at: /root/workspace
       - run:
           name: Install dependencies
           command: |
