@@ -328,7 +328,6 @@ jobs:
             frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
             bucket_name: "udapeople-${CIRCLE_WORKFLOW_ID:0:7}"
       
-
   configure-infrastructure:
     # Docker image here that supports Ansible
     executor: python-executor
@@ -460,6 +459,7 @@ jobs:
           name: Install dependencies
           command: |
             apk add tar gzip
+            apk add curl
             curl -fsSL https://deb.nodesource.com/setup_13.x | -E bash -
             apk add nodejs
             echo "node:$(node --version)" && echo "npm:$(npm --version)"
