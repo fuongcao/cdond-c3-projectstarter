@@ -28,7 +28,10 @@ commands:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
       # Add parameter here
-      stack_name:
+      backend:
+        type: string
+        default: ""
+      frontend:
         type: string
         default: ""
       bucket_name:
@@ -39,21 +42,6 @@ commands:
         enum: ["always", "on_success", "on_fail"]
         default: "on_fail"
     steps:
-      - run:
-          name: "Delete << parameters.stack_name >> stack"
-          when: << parameters.when >>
-          command: |
-            STACK_NAME="<< parameters.stack_name >>"
-            # stack_name not provied
-            if [[ -z $STACK_NAME ]]
-            then
-                echo "Stack not provied. Skip the delete stack action !"
-              exit 0
-            fi
-
-            echo "deleting stack $STACK_NAME ..."
-            aws cloudformation delete-stack --stack-name << parameters.stack_name >>
-
       - run:
           name: "Delete << parameters.bucket_name >> bucket"
           when: << parameters.when >>
@@ -66,8 +54,43 @@ commands:
               exit 0
             fi
 
-            echo "deleting bucket $BUCKET_NAME ..."
-            aws cloudformation delete-stack --stack-name << parameters.stack_name >>
+            BUCKET_URI="s3://$BUCKET_NAME"
+            BUCKKET_INFO=$(aws s3 ls $BUCKET_URI 2>&1)
+
+            if echo $BUCKKET_INFO | grep 'NoSuchBucket'
+            then
+              echo "Bucket doesn't exist, skip the empty bucket action"
+              exit 0
+            fi
+
+            # do empty bucket before deleting
+            aws s3 rm $BUCKET_URI --recursive
+
+      - run:
+          name: "Delete stack"
+          when: << parameters.when >>
+          command: |
+            STACK_NAME="<< parameters.backend >>"
+            # stack_name not provied
+            if [[ -z $STACK_NAME ]]
+            then
+                echo "Stack not provied. Skip the delete stack action !"
+              exit 0
+            else 
+              echo "deleting stack $STACK_NAME ..."
+              aws cloudformation delete-stack --stack-name << parameters.backend >>
+            fi
+
+            STACK_NAME="<< parameters.frontend >>"
+            # stack_name not provied
+            if [[ -z $STACK_NAME ]]
+            then
+                echo "Stack not provied. Skip the delete stack action !"
+              exit 0
+            else 
+              echo "deleting stack $STACK_NAME ..."
+              aws cloudformation delete-stack --stack-name << parameters.frontend >>
+            fi
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
@@ -294,14 +317,17 @@ jobs:
           command: |
             cp .circleci/ansible/inventory.txt workspace
 
+
       - persist_to_workspace:
           root: /root/project/workspace
           paths:
             - inventory.txt
       #Here's where you will add some code to rollback on failure
-      # - destroy-environment:
-      #     backend: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
-      #     frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+      - destroy-environment:
+            backend: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+            frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+            bucket_name: "udapeople-${CIRCLE_WORKFLOW_ID:0:7}"
+      
 
   configure-infrastructure:
     # Docker image here that supports Ansible
@@ -403,7 +429,9 @@ jobs:
             # Copy frontend to S3
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
             # save to workspace
-            STATIC_HOST=https://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3.amazonaws.com
+            export STATIC_HOST=https://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3.amazonaws.com
+            cd ..
+            pwd
             echo $STATIC_HOST > root/workspace/fe_static_host
             
       - persist_to_workspace:
@@ -431,9 +459,9 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add -y tar gzip
+            apk add tar gzip
             curl -fsSL https://deb.nodesource.com/setup_13.x | -E bash -
-            apk add -y nodejs
+            apk add nodejs
             echo "node:$(node --version)" && echo "npm:$(npm --version)"
             cd backend
             npm i
