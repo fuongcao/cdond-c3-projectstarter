@@ -6,13 +6,13 @@
   
 - name: "copy backend artifact zip file to server"
   copy:
-    src: "artifact-backend.tar.gz"
+    src: "artifact.tar.gz"
     dest: "~/webapp"
 
 - name: "Unzip backend artifact"
   unarchive:
     remote_src: yes
-    src: "~/webapp/artifact-backend.tar.gz"
+    src: "~/webapp/artifact.tar.gz"
     dest: "~/webapp"
 
 - name: "start backend server"
