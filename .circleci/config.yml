@@ -2,18 +2,21 @@ version: 2.1
 
 executors:
   nodejs-executor:
+  # working directory: /home/circleci/project
     docker:
       # - image: circleci/node:14.18.2
       - image: cimg/node:13.14.0
 
   awscli-executor:
+  # working directory: root/project
     docker:
       - image: amazon/aws-cli:2.12.1
 
   python-executor:
+  # working directory root/project
     docker:
       - image: python:3.7-alpine3.11
-
+  
 
 orbs:
   slack: circleci/slack@4.4.2
@@ -102,7 +105,7 @@ jobs:
           name: Build front-end
           command: |
             cd frontend
-            node --version && npm --version
+            echo "node:$(node --version)" && echo "npm:$(npm --version)"
             npm install
             npm run build
       - notify_slack_pass
@@ -122,7 +125,7 @@ jobs:
           name: Back-end build
           command: |
             cd backend
-            node --version && npm --version
+            echo "node:$(node --version)" && echo "npm:$(npm --version)"
             npm install
             npm run build
       - notify_slack_pass
@@ -145,7 +148,7 @@ jobs:
           name: Run front-end test
           command: |
             cd frontend
-            node --version && npm --version
+            echo "node:$(node --version)" && echo "npm:$(npm --version)"
             npm install
             npm run test
               
@@ -162,7 +165,7 @@ jobs:
           name: Run back-end test
           command: |
             cd backend
-            node --version && npm --version
+            echo "node:$(node --version)" && echo "npm:$(npm --version)"
             npm install
             npm run test
             
@@ -179,7 +182,7 @@ jobs:
           name: Audit frontend for vulnerability
           command: |
             cd frontend
-            node --version && npm --version
+            echo "node:$(node --version)" && echo "npm:$(npm --version)"
             npm install
             npm audit fix --audit-level=critical
             npm audit fix --force
@@ -204,7 +207,7 @@ jobs:
           name: Audit backend for vulnerability
           command: |
             cd backend
-            node --version && npm --version
+            echo "node:$(node --version)" && echo "npm:$(npm --version)"
             npm install
             npm audit fix --audit-level=critical
             npm audit fix --force
@@ -249,7 +252,6 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
@@ -259,7 +261,7 @@ jobs:
           name: Create workspace Show Working Directory
           command: |
             pwd 
-            mkdir -p workspace
+            mkdir -p /root/project/workspace
             ls -ls
       - run:
           name: copy inventory file to workspace
@@ -267,7 +269,7 @@ jobs:
             cp .circleci/ansible/inventory.txt workspace
 
       - persist_to_workspace:
-          root: workspace
+          root: /root/project/workspace
           paths:
             - inventory.txt
       #Here's where you will add some code to rollback on failure
@@ -286,16 +288,14 @@ jobs:
           fingerprints: ["5e:00:73:c4:88:cd:40:fa:a8:38:fa:0e:f9:4c:a8:4b"]
       # attach workspace'
       - attach_workspace:
-          at: workspace
+          at: root/workspace
       - run:
           name: print inventory file
           command: |
-            cat workspace/inventory.txt
+            cat root/workspace/inventory.txt
       - run:
           name: Show Working Directory
-          command: |
-            pwd 
-            ls -ls
+          command: pwd && ls -ls
       - run:
           name: Install dependencies
           command: |
@@ -305,7 +305,7 @@ jobs:
           name: Configure server
           command: |
             # Your code here
-            cp workspace/inventory.txt .circleci/ansible
+            cp root/workspace/inventory.txt .circleci/ansible
             cd .circleci/ansible
             cat inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
@@ -319,9 +319,7 @@ jobs:
       - checkout
       - run:
           name: Show Working Directory
-          command: |
-            pwd 
-            ls -ls
+          command: pwd && ls -ls
       - run:
           name: Run migrations
           command: |
@@ -353,8 +351,7 @@ jobs:
             yum install -y tar gzip
             curl -sL https://rpm.nodesource.com/setup_13.x | bash -
             yum install -y nodejs
-            echo node:$(node --version)
-            echo npm:$(npm --version)
+            echo "node:$(node --version)" && echo "npm:$(npm --version)"
 
       - run:
           name: Get backend url
@@ -373,26 +370,49 @@ jobs:
             cd frontend
             npm install
             npm run build
+            # Archive frontend artifact
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+            # Copy frontend to S3
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       # Here's where you will add some code to rollback on failure
                     
-#   deploy-backend:
-#     docker:
-#       # Docker image here that supports Ansible
-#     steps:
-#       # Checkout code from git
-#       # Add ssh keys with fingerprint
-#       # attach workspace
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             # your code here
-#       - run:
-#           name: Deploy backend
-#           command: |
-#             # your code here
-#       # Here's where you will add some code to rollback on failure  
+  deploy-backend:
+    # Docker image here that supports Ansible
+    executor: python-executor
+    steps:
+      - checkout
+      # Add ssh keys with fingerprint
+      - add_ssh_keys:
+          fingerprints: ["5e:00:73:c4:88:cd:40:fa:a8:38:fa:0e:f9:4c:a8:4b"]
+      - attach_workspace:
+          at: root/workspace
+      - run:
+          name: print inventory file and copy to .circleci/ansible
+          command: |
+            cat root/workspace/inventory.txt
+            cp root/workspace/inventory.txt .circleci/ansible
+      - run:
+          name: Install dependencies
+          command: |
+            cd backend
+            npm i
+            npm run build
+      - run:
+          name: Deploy backend
+          command: |
+              # Zip backend folder
+              cd ..
+              tar -C backend -czvf artifact.tar.gz .
+
+              # Move backend artifact to ansible deploy
+              mv artifact.tar.gz .circleci/ansible/roles/deploy/files
+
+              # Run Ansible playbook for backend
+              echo "Contents  of the inventory.txt file is -------"
+              cd .circleci/ansible/
+              cat inventory.txt
+              ansible-playbook -i inventory.txt roles/tasks/deploy-backend.yml
+      # Here's where you will add some code to rollback on failure  
 
 #   smoke-test:
 #     docker:

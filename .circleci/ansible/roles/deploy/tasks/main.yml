@@ -1,0 +1,25 @@
+---
+- name: "Create deploy directory"
+  file:
+    path: "~/webapp"
+    state: "directory"
+    mode: 0755
+  
+- name: "copy backend artifact zip file to server"
+  copy:
+    src: "artifact-backend.tar.gz"
+    dest: ~/webapp
+
+- name: "Unzip backend artifact"
+  unarchive:
+    src: "~/webapp/artifact-backend.tar.gz"
+    dest: "~/webapp"
+    mode: 0755
+
+- name: "start backend server"
+  shell:
+    cmd: |
+    echo node:$(node --version) && echo npm:$(npm --version) && echo pm2:$(pm2 --version)
+    cd ~/webapp
+    pm2 stop default
+    pm2 start npm -- start
