@@ -466,13 +466,12 @@ jobs:
           name: print inventory file and copy to .circleci/ansible
           command: |
             echo "Where am I ?"
-            pwd && ls /root
-            cat /root/workspace/inventory.txt
+            pwd && ls /root/workspace
             echo "Copy inventory.txt to ansible"
             cat /root/workspace/inventory.txt
-            cp /root/workspace/inventory.txt .circleci/ansible
+            cp /root/workspace/inventory.txt .circleci/ansible/
             echo "Copy artifact.tar.gz to ansible"
-            cp /root/workspace/artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
+            cp /root/workspace/artifact.tar.gz .circleci/ansible/roles/deploy/files/
             ls -ls .circleci/ansible/roles/deploy/files/
       - run:
           name: Install dependencies
