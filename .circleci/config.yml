@@ -350,9 +350,9 @@ jobs:
       - attach_workspace:
           at: /root/workspace
       - run:
-          name: print inventory file
+          name: Show workspace content
           command: |
-            cat /root/workspace/inventory.txt
+            ls -ls /root/workspace
       - run:
           name: Show Working Directory
           command: pwd && ls -ls
@@ -461,6 +461,10 @@ jobs:
       - attach_workspace:
           at: /root/workspace
       - run:
+          name: Show workspace content
+          command: |
+            ls -ls /root/workspace
+      - run:
           name: print inventory file and copy to .circleci/ansible
           command: |
             echo "Where am I ?"
@@ -471,13 +475,18 @@ jobs:
             cp /root/workspace/inventory.txt .circleci/ansible
             echo "Copy artifact.tar.gz to ansible"
             cp /root/workspace/artifact.tar.gz .circleci/ansible/roles/deploy/files
-            echo "Run Ansible playbook for backend"
+      - run:
+          name: Install dependencies
+          command: |
+            # install the dependencies needed for your playbook
+            apk add --update ansible
       - run:
           name: Deploy backend
           command: |
             echo "Contents  of the inventory.txt file is -------"
             cd .circleci/ansible/
             cat inventory.txt
+            echo "Run Ansible playbook for backend"
             ansible-playbook -i inventory.txt roles/tasks/deploy-backend.yml
 
       # Here's where you will add some code to rollback on failure  
@@ -489,6 +498,10 @@ jobs:
       - checkout
       - attach_workspace:
           at: /root/workspace
+      - run:
+          name: Show workspace content
+          command: |
+            ls -ls /root/workspace
       - run:
           name: Install dependencies
           command: |
