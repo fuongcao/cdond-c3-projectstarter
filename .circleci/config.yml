@@ -170,11 +170,10 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build] 
+          keys: [backend-build]
       - run:
           name: Back-end build
           command: |
-            apt install -y tag
             cd backend
             echo "node:$(node --version)" && echo "npm:$(npm --version)"
             npm install
