@@ -470,30 +470,29 @@ jobs:
           name: Backend smoke test.
           command: |
             BACKEND_IP=$(cat root/workspace/be_endpoint)
-            export API_URL="http://${BACKEND_IP}:3030"
+            API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
             if curl "${API_URL}/api/status" | grep "ok"
             then
-              echo "backend smoke test passed"
               return 0
             else
-              echo "backend smoke test fail"
-  	          return 1
-            fi
+              return 1
+            f
+
       - run:
           name: Frontend smoke test.
           command: |
             FE_STATIC_HOST=$(cat root/workspace/fe_statis_host)
-            TEST_URL="https://$FE_STATIC_HOST/index.html"
-            REPONSE = $(eval curl -s $TEST_URL)
-            if echo @RESPONSE | grep "View & Manage Employees" 
+            FE_URL="https://$FE_STATIC_HOST/index.html"
+            REPONSE = $(eval curl -s $FE_URL)
+            if echo $RESPONSE | grep "View & Manage Employees" 
             then
               echo "Frontend smoke test passed"
               echo $REPONSE
-              exit 0
+              return 0
             else
               echo "Frontend smoke test fail"
-              exit 1
+              return 1
             fi
       # Here's where you will add some code to rollback on failure  
 
