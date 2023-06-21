@@ -319,9 +319,9 @@ jobs:
               --output text >> .circleci/ansible/inventory.txt
             cat .circleci/ansible/inventory.txt
       - run:
-          name: Create workspace Show Working Directory
+          name: Create workspace- Show Working Directory
           command: |
-            mkdir -p /root/project/workspace
+            mkdir -p root/project/workspace
             pwd && ls -ls
       - run:
           name: copy inventory file to workspace
@@ -330,7 +330,7 @@ jobs:
 
 
       - persist_to_workspace:
-          root: /root/project/workspace
+          root: root/project/workspace
           paths:
             - inventory.txt
       #Here's where you will add some code to rollback on failure
@@ -345,10 +345,8 @@ jobs:
     steps:
       # Checkout code from git
       - checkout
-      # Add ssh keys with fingerprint
       - add_ssh_keys:
           fingerprints: ["5e:00:73:c4:88:cd:40:fa:a8:38:fa:0e:f9:4c:a8:4b"]
-      # attach workspace'
       - attach_workspace:
           at: root/workspace
       - run:
@@ -463,10 +461,14 @@ jobs:
       - attach_workspace:
           at: root/workspace
       - run:
-          name: print inventory file and copy to .circleci/ansible
+          name: print inventory file
           command: |
             echo "Where am I ?"
-            pwd && ls -la /root/workspace
+            pwd && ls -la root/
+            cat root/workspace/inventory.txt
+      - run:
+          name: print inventory file and copy to .circleci/ansible
+          command: |
             echo "Copy inventory.txt to ansible"
             cat root/workspace/inventory.txt
             cp root/workspace/inventory.txt .circleci/ansible
@@ -489,7 +491,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: /root/workspace
+          at: root/workspace
       - run:
           name: Install dependencies
           command: |
