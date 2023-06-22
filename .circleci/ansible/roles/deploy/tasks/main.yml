@@ -7,17 +7,17 @@
 - name: "copy backend artifact zip file to server"
   copy:
     src: "artifact.tar.gz"
-    dest: "~/webapp/artifact.tar.gz"
+    dest: "~/"
 
 - name: "Unzip backend artifact"
   unarchive:
     remote_src: yes
-    src: "~/webapp/artifact.tar.gz"
+    src: "~/artifact.tar.gz"
     dest: "~/webapp"
 
 - name: "start backend server"
   shell:
     cmd: |
-      cd ~/webapp
+      cd webapp
       pm2 stop default
       pm2 start npm -- start
