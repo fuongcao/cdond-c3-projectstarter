@@ -2,7 +2,7 @@
 - name: "upgrade packages."
   become: yes
   apt:
-    upgrade: "yes"
+    upgrade: yes
 
 - name: "Install dependencies"
   become: yes
