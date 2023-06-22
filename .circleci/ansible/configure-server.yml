@@ -28,7 +28,7 @@
 
     - name: Install Node.js
       shell: |
-        curl -sL https://deb.nodesource.com/setup_13.x | -E bash - && apt-get install -y nodejs
+        curl -sL https://deb.nodesource.com/setup_13.x | bash - && apt-get install -y nodejs
 
   # Get the environment variables from CircleCI and add to the EC2 instance
   environment:
