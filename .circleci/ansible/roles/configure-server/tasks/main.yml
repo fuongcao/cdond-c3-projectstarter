@@ -4,13 +4,6 @@
   apt:
     upgrade: yes
 
-- name: "Install dependencies"
-  become: yes
-  apt:
-    name: ["nodejs", "npm", "tar"]
-    state: "latest"
-    update_cache: yes
-
 - name: "install pm2"
   become: yes
   npm:
