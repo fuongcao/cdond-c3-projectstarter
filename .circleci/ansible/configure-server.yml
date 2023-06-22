@@ -26,13 +26,10 @@
       apt:
         update_cache: yes
 
-    - name: Install Node.js dependencies
-      apt:
-        name: "{{ item }}"
+    - name: Install the gpg key for nodejs LTS
+      apt_key:
+        url: "https://deb.nodesource.com/gpgkey/nodesource.gpg.key"
         state: present
-      loop:
-        - curl
-        - software-properties-common
 
     - name: Add NodeSource repository
       apt_repository:
@@ -44,7 +41,7 @@
     - name: Install Node.js
       apt:
         name: nodejs
-        state: latest
+        state: present
 
   # Get the environment variables from CircleCI and add to the EC2 instance
   environment:
