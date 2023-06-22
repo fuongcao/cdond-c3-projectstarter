@@ -294,7 +294,6 @@ jobs:
       - run:
           name: Install tar utility
           command: |
-            lsb_release -a
             yum install -y tar gzip
       - run:
           name: Ensure back-end infrastructure exists
@@ -359,7 +358,6 @@ jobs:
       - run:
           name: Show workspace content
           command: |
-            lsb_release -a
             ls -ls /root/workspace
       - run:
           name: Show Working Directory
@@ -419,7 +417,6 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            lsb_release -a
             yum install -y tar gzip
             curl -sL https://rpm.nodesource.com/setup_13.x | bash -
             yum install -y nodejs
@@ -471,7 +468,6 @@ jobs:
       - run:
           name: Show workspace content
           command: |
-            lsb_release -a
             ls -ls /root/workspace
       - run:
           name: print inventory file and copy to .circleci/ansible
