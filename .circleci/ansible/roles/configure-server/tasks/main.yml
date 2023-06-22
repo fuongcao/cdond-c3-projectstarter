@@ -1,12 +1,7 @@
 ---
-- name: "upgrade packages."
-  become: yes
-  apt:
-    upgrade: yes
-
 - name: "install pm2"
   become: yes
-  npm:
+  apt:
     name: pm2
     global: yes
     production: yes
