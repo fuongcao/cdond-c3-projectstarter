@@ -2,7 +2,7 @@
 - name: "configuration play." 
   hosts: web
   user: ubuntu
-  become: yes 
+  become: yes
   become_method: sudo
   become_user: root  
   gather_facts: yes
@@ -38,7 +38,7 @@
       apt_repository:
         repo: "deb https://deb.nodesource.com/node_13.x {{ ansible_distribution_release }} main"
         state: present
-        update_cache: no
+        update_cache: yes
         filename: nodesource
 
     - name: Install Node.js

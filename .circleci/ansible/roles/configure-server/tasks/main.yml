@@ -1,6 +1,18 @@
 ---
+- name: "upgrade packages."
+  become: yes
+  apt:
+    upgrade: "yes"
+
+- name: "Install dependencies"
+  become: yes
+  apt:
+    name: ["nodejs", "npm", "tar"]
+    state: "latest"
+    update_cache: yes
+
 - name: "install pm2"
-  become: true
+  become: yes
   npm:
     name: pm2
     global: yes
@@ -8,7 +20,7 @@
     state: present
 
 - name: "Export env"
-  become: true
+  become: yes
   shell:  |
     touch /etc/profile.d/env.sh
     echo export TYPEORM_HOST=$TYPTYPEORM_HOST >> /etc/profile.d/env.sh
