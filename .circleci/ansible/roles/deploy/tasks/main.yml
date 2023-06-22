@@ -18,5 +18,6 @@
 - name: "start backend server"
   shell: |
     cd webapp
+    echo ls > whereiam
     pm2 stop default
-    pm2 start npm -- start
+    pm2 start npm -- start --wait-ready
