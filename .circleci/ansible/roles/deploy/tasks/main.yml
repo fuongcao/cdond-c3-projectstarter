@@ -24,19 +24,5 @@
 - name: "start backend server"
   shell: |
     cd webapp
-    echo $(pm2 ls) > ~/logs/pm2ls
-    echo $(pm2 stop default) > ~/logs/pm2stop
-    echo $(pm2 delete default) > ~/logs/pm2delete
-    echo $(pm2 start npm --name "udapeople" -- start) > ~/logs/pm2start
-    sleep 15
-    echo $(lsof -i -P -n | grep *:3030) > ~/logs/lsof3030
-    if [[ -z $(cat ~/logs/lsof3030)]]
-    then
-      echo $(pm2 delete udapeople) > ~/logs/pm2deleteudapeople
-      echo $(pm2 start npm --name "udapeople" -- start) > ~/logs/pm2startudapeople
-    fi
-    sleep 15
-    echo $(pm2 ls) > ~/logs/pm2lsagain
-    echo $(lsof -i -P -n | grep *:3030) > ~/logs/lsof3030again
-
-    
+    pm2 stop default
+    pm2 start npm --name "udapeople" -- start
