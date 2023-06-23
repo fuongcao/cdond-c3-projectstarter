@@ -20,8 +20,7 @@ executors:
 
 orbs:
   slack: circleci/slack@4.4.2
-  aws-cli: circleci/aws-cli@0.1.2
-  aws-s3: circleci/aws-s3@1.0.0
+  aws-cli: circleci/aws-cli@3.1.5
 
 commands:
   destroy-environment:
@@ -57,7 +56,7 @@ commands:
             BUCKET_URI="s3://$BUCKET_NAME"
             BUCKKET_INFO=$(aws s3 ls $BUCKET_URI 2>&1)
 
-            if echo $BUCKKET_INFO | grep 'NoSuchBucket'
+            if echo $BUCKKET_INFO | grep 'NoSuchBucket' > /dev/null
             then
               echo "Bucket doesn't exist, skip the empty bucket action"
               exit 0
@@ -503,6 +502,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: /home/circleci/workspace
+      - aws-cli/setup
       - run:
           name: Show workspace content
           command: |
@@ -518,7 +518,7 @@ jobs:
             BACKEND_IP=$(cat /home/circleci/workspace/be_endpoint)
             API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
-            if curl "${API_URL}/api/status" | grep "ok"
+            if curl "${API_URL}/api/status" | grep "ok" > /dev/null
             then
               echo "Backend smoke test passed"
               exit 0
@@ -531,15 +531,21 @@ jobs:
           command: |
             URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/#/employees"            
             echo ${URL} 
-            if curl -s ${URL} | grep "Welcome"
+            if curl -s ${URL} | grep "Welcome" > /dev/null
             then
               echo "Frontend smoke test passed"
-              exit 0
+              exit 1
             else
               echo "Frontend smoke test fail"
               exit 1
             fi
-      # Here's where you will add some code to rollback on failure  
+      # Here's where you will add some code to rollback on failure
+      - destroy-environment:
+          backend: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+          frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+          bucket_name: "udapeople-${CIRCLE_WORKFLOW_ID:0:7}"
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   cloudfront-update:
     # Docker image here that supports AWS CLI
