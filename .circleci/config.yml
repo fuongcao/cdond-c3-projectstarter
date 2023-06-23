@@ -455,13 +455,9 @@ jobs:
       - attach_workspace:
           at: /home/circleci/workspace
       - run:
-          name: Show workspace content
-          command: |
-            lsb_release -a
-            ls -ls /home/circleci/workspace
-      - run:
           name: Install Dependencies
           command: |
+            ls -ls /home/circleci/workspace
             sudo apt install -y tar
             if aws --version | grep "aws-cli/" > /dev/null
             then
@@ -493,7 +489,7 @@ jobs:
             if curl -s ${URL} | grep "Welcome" > /dev/null
             then
               echo "Frontend smoke test passed"
-              exit 1
+              exit 0
             else
               echo "Frontend smoke test fail"
               exit 1
@@ -527,37 +523,40 @@ jobs:
 
             echo OldWorkflowID: ${OldWorkflowID}
             echo Current WorkflowID: ${CIRCLE_WORKFLOW_ID:0:7}
+
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - OldWorkflowID.txt
       # Here's where you will add some code to rollback on failure  
 
   cleanup:
     executor: awscli-executor
     steps:
       - checkout
+      - attach_workspace:
+          at: /root/workspace
       - run:
-          name: Get old stack workflow id
+          name: Install Dependencies
           command: |
-            ## Fetch the Old workflow ID
-            export OldWorkflowID=$(aws cloudformation \
-              list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-              --no-paginate --output text)
-            echo OldWorkflowID: "${OldWorkflowID}"
-            echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"
-
-            ## Fetch the stack names          
-            export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
-                      --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
-            echo Stack names: "${STACKS[@]}" 
-
+            ls -ls /root/workspace
+            sudo apt install -y tar            
       - run:
           name: Remove old stacks and files
           command: |
-            if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+            cat /root/workspace/
+            OldWorkflowID=$(cat /root/workspace/OldWorkflowID.txt)
+            echo $OldWorkflowID
+
+            if [[ "${CIRCLE_WORKFLOW_ID:0:7}" =~ "${OldWorkflowID}" ]]
             then
+              echo "------------------------Deleted Confirmed---------------------------------"
               aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
               aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
               aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
+            else
+              echo "------------------------Cannot Cleanup---------------------------------"
             fi
-            
 
 workflows:
   default:
@@ -594,5 +593,5 @@ workflows:
           requires: [deploy-frontend]
       - smoke-test:
           requires: [deploy-backend, cloudfront-update]
-      # - cleanup:
-      #     requires: [cloudfront-update]
+      - cleanup:
+          requires: [cloudfront-update]
