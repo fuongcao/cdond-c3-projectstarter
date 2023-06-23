@@ -3,6 +3,12 @@
     path: "~/webapp"
     state: "directory"
     mode: 0755
+
+- name: "Create logs directory"
+  file:
+    path: "~/logs"
+    state: "directory"
+    mode: 0755
   
 - name: "copy backend artifact zip file to server"
   copy:
@@ -18,6 +24,7 @@
 - name: "start backend server"
   shell: |
     cd webapp
-    pm2 stop default
-    pm2 delete default
-    pm2 start npm -- start --wait-ready
+    echo $(pm2 ls) > ~/logs/pm2ls
+    echo $(pm2 stop default) > ~/logs/pm2stop
+    echo $(pm2 delete default) > ~/logs/pm2delete
+    echo $(pm2 start npm --name "udapeople" -- start) > ~/logs/pm2start
