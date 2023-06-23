@@ -28,3 +28,26 @@
     echo $(pm2 stop default) > ~/logs/pm2stop
     echo $(pm2 delete default) > ~/logs/pm2delete
     echo $(pm2 start npm --name "udapeople" -- start) > ~/logs/pm2start
+
+- name: Sleep for 15 seconds and continue with play
+    wait_for:
+    timeout: 15
+
+- name: "start backend server"
+  shell: |
+    echo $(lsof -i -P -n | grep *:3030) > ~/logs/lsof3030
+    if [[ -z $(cat ~/logs/lsof3030)]]
+    then
+      echo $(pm2 delete udapeople) > ~/logs/pm2deleteudapeople
+      echo $(pm2 start npm --name "udapeople" -- start) > ~/logs/pm2startudapeople
+    fi
+
+- name: Sleep for 15 seconds and continue with play
+    wait_for:
+    timeout: 15
+
+- name: "start backend server"
+  shell: |
+    echo $(lsof -i -P -n | grep *:3030) > ~/logs/lsof3030again     
+
+    
