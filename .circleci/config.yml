@@ -55,7 +55,7 @@ commands:
             unzip awscliv2.zip
             sudo ./aws/install
       - run:
-          name: "Delete << parameters.bucket_name >> bucket"
+          name: "Empty << parameters.bucket_name >> bucket"
           when: << parameters.when >>
           command: |
             BUCKET_NAME="<< parameters.bucket_name >>"
@@ -116,8 +116,8 @@ commands:
           when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = $(curl https://kvdb.io/5wmWmpBowaqtCzGWxLD169/migration_<< parameters.workflow_id >>)
-            if(( $SUCCESS==1 )); 
+            SUCCESS=$(curl https://kvdb.io/5wmWmpBowaqtCzGWxLD169/migration_<< parameters.workflow_id >>)
+            if(( $SUCCESS==1 ))
             then
               cd ~/project/backend
               npm install
@@ -513,6 +513,8 @@ jobs:
     executor: nodejs-executor
     steps:
       - checkout
+      - restore_cache:
+          keys: [frontend-build]
       - attach_workspace:
           at: /home/circleci/workspace
       - run:
