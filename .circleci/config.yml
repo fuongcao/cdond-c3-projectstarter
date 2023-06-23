@@ -26,83 +26,17 @@ commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
-      # Add parameter here
-      backend:
+      workflow_id:
         type: string
-        default: ""
-      frontend:
-        type: string
-        default: ""
-      bucket_name:
-        type: string
-        default: ""
-      when:
-        type: enum
-        enum: ["always", "on_success", "on_fail"]
-        default: "on_fail"
     steps:
       - run:
-          name: "Install AWS CLI"
-          when: << parameters.when >>
+          name: Destroy environments
+          when: on_fail
           command: |
-            if aws --version | grep "aws-cli/" > /dev/null
-            then
-              echo "AWS CLI is already installed, skipping installation."
-              exit 0
-            fi
-
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
-      - run:
-          name: "Empty << parameters.bucket_name >> bucket"
-          when: << parameters.when >>
-          command: |
-            BUCKET_NAME="<< parameters.bucket_name >>"
-            # bucket_name not provied
-            if [[ -z $BUCKET_NAME ]]
-            then
-                echo "Bucket not provied. Skip the delete bucket action !"
-              exit 0
-            fi
-
-            BUCKET_URI="s3://$BUCKET_NAME"
-            BUCKKET_INFO=$(aws s3 ls $BUCKET_URI 2>&1)
-
-            if echo $BUCKKET_INFO | grep 'NoSuchBucket' > /dev/null
-            then
-              echo "Bucket doesn't exist, skip the empty bucket action"
-              exit 0
-            fi
-
-            # do empty bucket before deleting
-            aws s3 rm $BUCKET_URI --recursive
-
-      - run:
-          name: "Delete stack"
-          when: << parameters.when >>
-          command: |
-            STACK_NAME="<< parameters.backend >>"
-            # stack_name not provied
-            if [[ -z $STACK_NAME ]]
-            then
-                echo "Stack not provied. Skip the delete stack action !"
-              exit 0
-            else 
-              echo "deleting stack $STACK_NAME ..."
-              aws cloudformation delete-stack --stack-name << parameters.backend >>
-            fi
-
-            STACK_NAME="<< parameters.frontend >>"
-            # stack_name not provied
-            if [[ -z $STACK_NAME ]]
-            then
-                echo "Stack not provied. Skip the delete stack action !"
-              exit 0
-            else 
-              echo "deleting stack $STACK_NAME ..."
-              aws cloudformation delete-stack --stack-name << parameters.frontend >>
-            fi
+            echo "Destroying environment: << parameters.workflow_id >> "
+            aws s3 rm udapeople-<< parameters.workflow_id >>  --recursive
+            aws cloudformation delete-stack --stack-name backend-<< parameters.workflow_id >>
+            aws cloudformation delete-stack --stack-name frontend-<< parameters.workflow_id >>
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
@@ -526,6 +460,14 @@ jobs:
           name: Install Dependencies
           command: |
             sudo apt install -y tar
+            if aws --version | grep "aws-cli/" > /dev/null
+            then
+              echo "AWS CLI is already installed, skipping installation."
+              exit 0
+            fi
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - run:
           name: Backend smoke test.
           command: |
@@ -555,9 +497,7 @@ jobs:
             fi
       # Here's where you will add some code to rollback on failure
       - destroy-environment:
-          backend: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
-          frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
-          bucket_name: "udapeople-${CIRCLE_WORKFLOW_ID:0:7}"
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
