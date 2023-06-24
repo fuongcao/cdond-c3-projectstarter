@@ -541,13 +541,13 @@ jobs:
     executor: awscli-executor
     steps:
       - checkout
-      - attach_workspace:
-          at: /root/workspace
       - run:
           name: Install Dependencies
           command: |
             ls -ls /root/workspace
-            sudo apt install -y tar            
+            sudo apt install -y tar
+      - attach_workspace:
+          at: /root/workspace            
       - run:
           name: Remove old stacks and files
           command: |
