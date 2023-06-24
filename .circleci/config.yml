@@ -508,10 +508,7 @@ jobs:
       - run:
           name: Install Dependencies
           command: |
-            ls -ls /root/workspace
-            sudo apt install -y tar
-      - attach_workspace:
-          at: /root/workspace
+            yum install -y tar gzip
       - run:
           name: Update cloudfront distribution
           command: |
@@ -544,14 +541,14 @@ jobs:
       - run:
           name: Install Dependencies
           command: |
-            ls -ls /root/workspace
-            sudo apt install -y tar
+            yum install -y tar gzip
       - attach_workspace:
           at: /root/workspace            
       - run:
           name: Remove old stacks and files
           command: |
-            cat /root/workspace/
+            ls -la /root/workspace/
+            cat /root/workspace/OldWorkflowID.tx
             OldWorkflowID=$(cat /root/workspace/OldWorkflowID.txt)
             echo $OldWorkflowID
 
