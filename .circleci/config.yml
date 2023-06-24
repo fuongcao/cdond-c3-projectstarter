@@ -554,12 +554,12 @@ jobs:
 
             if [[ "${CIRCLE_WORKFLOW_ID:0:7}" =~ "${OldWorkflowID}" ]]
             then
-              echo "------------------------Deleted Confirmed---------------------------------"
+              echo "------------------------Deleted-Confirmed---------------------------------"
               aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
               aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
               aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
             else
-              echo "------------------------Cannot Cleanup---------------------------------"
+              echo "------------------------Cannot-Cleanup---------------------------------"
             fi
 
 workflows:
