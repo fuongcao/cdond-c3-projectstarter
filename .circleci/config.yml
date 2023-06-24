@@ -522,7 +522,7 @@ jobs:
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
               --stack-name "InitialStack" \
-              --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=udapeople Name=udapeople-${CIRCLE_WORKFLOW_ID:0:7}
 
             echo OldWorkflowID: ${OldWorkflowID}
@@ -548,11 +548,11 @@ jobs:
           name: Remove old stacks and files
           command: |
             ls -la /root/workspace/
-            cat /root/workspace/OldWorkflowID.tx
+            cat /root/workspace/OldWorkflowID.txt
             OldWorkflowID=$(cat /root/workspace/OldWorkflowID.txt)
             echo $OldWorkflowID
 
-            if [[ "${CIRCLE_WORKFLOW_ID:0:7}" =~ "${OldWorkflowID}" ]]
+            if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OldWorkflowID}" ]]
             then
               echo "------------------------Deleted-Confirmed---------------------------------"
               aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
