@@ -288,7 +288,6 @@ jobs:
       #Here's where you will add some code to rollback on failure
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
-
       
   configure-infrastructure:
     # Docker image here that supports Ansible
@@ -379,7 +378,7 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
             export API_URL="http://${BACKEND_IP}:3030"
-            echo "API_URL = ${API_URL}"
+            echo "API_URL=${API_URL}"
             echo "API_URL=http://${BACKEND_IP}:3030" >> frontend/.env
             cat frontend/.env
             # save to workspace
@@ -397,13 +396,16 @@ jobs:
             cd ..
             pwd
             echo $STATIC_HOST > /root/workspace/fe_static_host
-            
       - persist_to_workspace:
           root: /root/workspace
           paths:
             - be_endpoint
             - fe_static_host
-      # Here's where you will add some code to rollback on failure
+        # Here's where you will add some code to rollback on failure
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   deploy-backend:
     # Docker image here that supports Ansible
@@ -443,8 +445,11 @@ jobs:
             cat inventory.txt
             echo "Run Ansible playbook for backend"
             ansible-playbook -i inventory.txt deploy-backend.yml
-
-      # Here's where you will add some code to rollback on failure  
+      # Here's where you will add some code to rollback on failure
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   smoke-test:
     # Lightweight Docker image
