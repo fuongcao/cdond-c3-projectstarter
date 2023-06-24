@@ -521,7 +521,7 @@ jobs:
 
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
-              --stack-name "InitialStack-${OldWorkflowID}" \
+              --stack-name "InitialStack" \
               --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=udapeople Name=udapeople-${CIRCLE_WORKFLOW_ID:0:7}
 
@@ -593,9 +593,9 @@ workflows:
           requires: [run-migrations]
       - deploy-backend:
           requires: [run-migrations]
-      - cloudfront-update:
-          requires: [deploy-frontend]
       - smoke-test:
-          requires: [deploy-backend, cloudfront-update]
-      - cleanup:
-          requires: [cloudfront-update]
+          requires: [deploy-backend, deploy-frontend]
+      - cloudfront-update:
+          requires: [smoke-test]
+      # - cleanup:
+      #     requires: [cloudfront-update]
