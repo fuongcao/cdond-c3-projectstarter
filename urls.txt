@@ -1,0 +1,6 @@
+URL01: https://github.com/fuongcao/cdond-c3-projectstarter
+URL02: http://udapeople-a0a80e8.s3-website-us-east-1.amazonaws.com
+URL03: https://dd1fut54xvypq.cloudfront.net/
+## cannot accesss by ec2 public DNS, use ip instead.  
+URL04: http://3.214.173.221:3030/api/status
+URL05: http://34.204.240.193:9090/targets
