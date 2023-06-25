@@ -35,3 +35,17 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub backend-${ID}
+
+  EIPAddress:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref EC2Instance 
+
+Outputs:
+  InstanceId:
+    Description: InstanceId of the newly created EC2 instance
+    Value: !Ref 'EC2Instance'
+  InstanceIPAddress:
+    Description: EIP address of the newly created EC2 instance
+    Value: !Ref 'EIPAddress'
